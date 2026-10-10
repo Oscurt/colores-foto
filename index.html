@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f7f4" />
+    <title>Colores de tu foto — búsqueda orientativa</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #292923;
+        background: #f8f7f4;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .page {
+        width: min(100% - 36px, 1040px);
+        margin: 0 auto;
+        padding: 42px 0 64px;
+      }
+
+      header {
+        max-width: 700px;
+        margin-bottom: 28px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: #746c5e;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 6vw, 48px);
+        letter-spacing: -0.055em;
+        line-height: 1.05;
+      }
+
+      .intro {
+        max-width: 610px;
+        margin: 14px 0 0;
+        color: #66645d;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .notice {
+        margin-top: 18px;
+        padding: 12px 15px;
+        border: 1px solid #e9ddbb;
+        border-radius: 12px;
+        background: #fff9e9;
+        color: #665735;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(285px, 0.85fr);
+        align-items: start;
+        gap: 20px;
+      }
+
+      .panel {
+        min-width: 0;
+        padding: 20px;
+        border: 1px solid #e9e7e1;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 26px #35301c08;
+      }
+
+      .upload-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .upload-button,
+      .action-button {
+        min-height: 42px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 11px;
+        background: #34382c;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      .upload-button:hover,
+      .action-button:hover:not(:disabled) {
+        background: #4c513e;
+      }
+
+      .action-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      #photo-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        clip-path: inset(50%);
+      }
+
+      .file-name {
+        min-width: 0;
+        overflow: hidden;
+        color: #77766e;
+        font-size: 13px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .canvas-wrap {
+        min-height: 310px;
+        margin-top: 18px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        border: 1px dashed #d9d6ce;
+        border-radius: 14px;
+        background:
+          linear-gradient(45deg, #f0efeb 25%, transparent 25%),
+          linear-gradient(-45deg, #f0efeb 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #f0efeb 75%),
+          linear-gradient(-45deg, transparent 75%, #f0efeb 75%),
+          #f8f7f4;
+        background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+        background-size: 16px 16px;
+      }
+
+      canvas {
+        display: none;
+        max-width: 100%;
+        max-height: 68vh;
+        cursor: crosshair;
+        object-fit: contain;
+      }
+
+      .empty {
+        max-width: 260px;
+        padding: 24px;
+        color: #77766e;
+        font-size: 14px;
+        line-height: 1.55;
+        text-align: center;
+      }
+
+      .empty strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #34382c;
+        font-size: 16px;
+      }
+
+      .canvas-hint {
+        margin: 11px 0 0;
+        color: #77766e;
+        font-size: 12px;
+      }
+
+      .results-heading {
+        margin: 0;
+        font-size: 19px;
+        letter-spacing: -0.025em;
+      }
+
+      .results-intro {
+        margin: 7px 0 16px;
+        color: #77766e;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .sample {
+        display: grid;
+        grid-template-columns: 54px 1fr;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding: 12px;
+        border: 1px solid #eceae5;
+        border-radius: 13px;
+      }
+
+      .sample-chip {
+        width: 54px;
+        height: 54px;
+        border: 1px solid #00000012;
+        border-radius: 10px;
+        background: #eeede8;
+      }
+
+      .sample-label {
+        margin: 0 0 4px;
+        color: #77766e;
+        font-size: 12px;
+      }
+
+      .sample-value {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .match {
+        padding-top: 14px;
+        border-top: 1px solid #eceae5;
+      }
+
+      .match-title {
+        margin: 0 0 10px;
+        color: #77766e;
+        font-size: 12px;
+        font-weight: 750;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .match-card {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        align-items: center;
+        gap: 11px;
+        padding: 11px;
+        border: 1px solid #eceae5;
+        border-radius: 12px;
+      }
+
+      .match-swatch {
+        width: 42px;
+        height: 42px;
+        border: 1px solid #00000012;
+        border-radius: 9px;
+        background: #eeede8;
+      }
+
+      .match-name {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .match-code {
+        margin: 3px 0 0;
+        color: #77766e;
+        font-size: 12px;
+      }
+
+      .match-distance {
+        margin: 10px 0 0;
+        color: #77766e;
+        font-size: 12px;
+      }
+
+      .palette {
+        display: grid;
+        gap: 9px;
+      }
+
+      .palette-item {
+        display: grid;
+        grid-template-columns: 40px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #eceae5;
+        border-radius: 11px;
+        background: #fff;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .palette-item:hover {
+        border-color: #aaa493;
+        background: #fcfbf8;
+      }
+
+      .palette-swatch {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #00000012;
+        border-radius: 8px;
+      }
+
+      .palette-label {
+        min-width: 0;
+      }
+
+      .palette-label strong,
+      .palette-label span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .palette-label strong {
+        font-size: 13px;
+      }
+
+      .palette-label span,
+      .palette-percent {
+        margin-top: 3px;
+        color: #77766e;
+        font-size: 11px;
+      }
+
+      .palette-percent {
+        font-weight: 750;
+      }
+
+      .empty-results {
+        padding: 14px;
+        border: 1px dashed #d9d6ce;
+        border-radius: 12px;
+        color: #77766e;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .error {
+        margin: 12px 0 0;
+        color: #a33225;
+        font-size: 13px;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          padding-top: 30px;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .page {
+          width: min(100% - 24px, 1040px);
+        }
+
+        .panel {
+          padding: 15px;
+        }
+
+        .canvas-wrap {
+          min-height: 230px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <p class="eyebrow">Herramienta de color para inspirarte</p>
+        <h1>¿Qué colores tiene tu foto?</h1>
+        <p class="intro">
+          Sube una imagen para extraer sus tonos principales o toca cualquier punto
+          para identificar ese color y encontrar una referencia visual cercana.
+        </p>
+        <div class="notice">
+          Las referencias Pantone son aproximaciones hechas con una pequeña selección
+          de colores conocidos. No son una conversión oficial ni sustituyen una guía Pantone
+          física o digital licenciada.
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="panel" aria-label="Cargar y explorar una foto">
+          <div class="upload-row">
+            <label class="upload-button" for="photo-input">Elegir una foto</label>
+            <input id="photo-input" type="file" accept="image/*" />
+            <span class="file-name" id="file-name">No has elegido ninguna imagen</span>
+          </div>
+          <p class="error" id="error" role="alert" hidden></p>
+          <div class="canvas-wrap">
+            <div class="empty" id="empty">
+              <strong>Tu foto aparecerá aquí</strong>
+              La imagen se procesa en este navegador y no se sube a ningún servidor.
+            </div>
+            <canvas id="photo-canvas" aria-label="Foto; toca un punto para analizar su color"></canvas>
+          </div>
+          <p class="canvas-hint" id="canvas-hint" hidden>
+            Toca o haz clic sobre la foto para analizar ese punto.
+          </p>
+        </section>
+
+        <section class="panel" aria-label="Colores encontrados">
+          <h2 class="results-heading">Colores de la foto</h2>
+          <p class="results-intro">Toca uno de los tonos principales para compararlo.</p>
+
+          <div class="sample" aria-live="polite">
+            <div class="sample-chip" id="sample-chip"></div>
+            <div>
+              <p class="sample-label" id="sample-label">Elige un color</p>
+              <p class="sample-value" id="sample-value">—</p>
+            </div>
+          </div>
+
+          <div class="match" id="match" aria-live="polite">
+            <p class="match-title">Referencia visual más cercana</p>
+            <div class="empty-results">Carga una foto y toca un punto para ver una referencia.</div>
+          </div>
+
+          <div class="match" style="margin-top: 16px">
+            <p class="match-title">Tonos principales</p>
+            <div class="palette" id="palette">
+              <div class="empty-results">Carga una foto para extraer los tonos principales.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const references = [
+        { code: "17-3938", name: "Very Peri", hex: "#6667AB" },
+        { code: "17-1230", name: "Mocha Mousse", hex: "#A47864" },
+        { code: "13-1023", name: "Peach Fuzz", hex: "#FFBE98" },
+        { code: "18-1750", name: "Viva Magenta", hex: "#BB2649" },
+        { code: "19-4052", name: "Classic Blue", hex: "#0F4C81" },
+        { code: "16-1546", name: "Living Coral", hex: "#FF6F61" },
+        { code: "15-0343", name: "Greenery", hex: "#88B04B" },
+        { code: "18-1438", name: "Marsala", hex: "#955251" },
+        { code: "17-1463", name: "Tangerine Tango", hex: "#DD4124" },
+        { code: "18-3224", name: "Radiant Orchid", hex: "#B565A7" },
+        { code: "18-5849", name: "Emerald", hex: "#009473" },
+        { code: "18-2120", name: "Honeysuckle", hex: "#D94F70" },
+        { code: "14-0848", name: "Mimosa", hex: "#EFC050" },
+        { code: "18-3838", name: "Ultra Violet", hex: "#5F4B8B" },
+        { code: "15-3919", name: "Serenity", hex: "#92A8D1" },
+        { code: "13-0647", name: "Illuminating", hex: "#F5DF4D" },
+        { code: "17-1462", name: "Flame", hex: "#F2552C" },
+        { code: "15-5519", name: "Turquoise", hex: "#45B5AA" },
+        { code: "18-1664", name: "Fiery Red", hex: "#C62137" },
+        { code: "19-4028", name: "Blue Nights", hex: "#363B48" },
+      ];
+
+      const input = document.querySelector("#photo-input");
+      const canvas = document.querySelector("#photo-canvas");
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      const empty = document.querySelector("#empty");
+      const error = document.querySelector("#error");
+      const palette = document.querySelector("#palette");
+      const match = document.querySelector("#match");
+      const sampleChip = document.querySelector("#sample-chip");
+      const sampleLabel = document.querySelector("#sample-label");
+      const sampleValue = document.querySelector("#sample-value");
+      let imageBitmap;
+
+      function rgbToLab([r, g, b]) {
+        const linear = [r, g, b].map((value) => {
+          const channel = value / 255;
+          return channel <= 0.04045
+            ? channel / 12.92
+            : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        const x = (linear[0] * 0.4124564 + linear[1] * 0.3575761 + linear[2] * 0.1804375) / 0.95047;
+        const y = linear[0] * 0.2126729 + linear[1] * 0.7151522 + linear[2] * 0.072175;
+        const z = (linear[0] * 0.0193339 + linear[1] * 0.119192 + linear[2] * 0.9503041) / 1.08883;
+        const pivot = (value) => value > 0.0088564517
+          ? Math.cbrt(value)
+          : 7.787037 * value + 16 / 116;
+        const fx = pivot(x);
+        const fy = pivot(y);
+        const fz = pivot(z);
+        return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+      }
+
+      function parseHex(hex) {
+        return [
+          Number.parseInt(hex.slice(1, 3), 16),
+          Number.parseInt(hex.slice(3, 5), 16),
+          Number.parseInt(hex.slice(5, 7), 16),
+        ];
+      }
+
+      function nearestReference(rgb) {
+        const lab = rgbToLab(rgb);
+        return references
+          .map((reference) => {
+            const candidate = rgbToLab(parseHex(reference.hex));
+            const distance = Math.hypot(
+              lab[0] - candidate[0],
+              lab[1] - candidate[1],
+              lab[2] - candidate[2],
+            );
+            return { ...reference, distance };
+          })
+          .sort((a, b) => a.distance - b.distance)[0];
+      }
+
+      function rgbHex([r, g, b]) {
+        return `#${[r, g, b]
+          .map((value) => Math.round(value).toString(16).padStart(2, "0"))
+          .join("")
+          .toUpperCase()}`;
+      }
+
+      function showMatch(rgb) {
+        const hex = rgbHex(rgb);
+        const nearest = nearestReference(rgb);
+        sampleChip.style.backgroundColor = hex;
+        sampleLabel.textContent = "Color de la foto";
+        sampleValue.textContent = hex;
+        match.innerHTML = `
+          <p class="match-title">Referencia visual más cercana</p>
+          <div class="match-card">
+            <div class="match-swatch" style="background-color: ${nearest.hex}"></div>
+            <div>
+              <p class="match-name">${nearest.name}</p>
+              <p class="match-code">PANTONE ${nearest.code} · ${nearest.hex}</p>
+            </div>
+          </div>
+          <p class="match-distance">Similitud calculada por color; referencia orientativa.</p>
+        `;
+      }
+
+      function getDominantColors() {
+        const { width, height } = canvas;
+        const { data } = context.getImageData(0, 0, width, height);
+        const stride = Math.max(1, Math.floor(Math.sqrt((width * height) / 18000)));
+        const bins = new Map();
+        let sampled = 0;
+
+        for (let y = 0; y < height; y += stride) {
+          for (let x = 0; x < width; x += stride) {
+            const index = (y * width + x) * 4;
+            if (data[index + 3] < 128) continue;
+            const r = data[index];
+            const g = data[index + 1];
+            const b = data[index + 2];
+            const key = (r >> 3) * 1024 + (g >> 3) * 32 + (b >> 3);
+            const bin = bins.get(key) || { r: 0, g: 0, b: 0, count: 0 };
+            bin.r += r;
+            bin.g += g;
+            bin.b += b;
+            bin.count += 1;
+            bins.set(key, bin);
+            sampled += 1;
+          }
+        }
+
+        const colors = [...bins.values()]
+          .map((bin) => ({
+            rgb: [bin.r / bin.count, bin.g / bin.count, bin.b / bin.count],
+            count: bin.count,
+          }))
+          .sort((a, b) => b.count - a.count);
+        const selected = [];
+        for (const color of colors) {
+          const tooSimilar = selected.some((other) =>
+            Math.hypot(
+              color.rgb[0] - other.rgb[0],
+              color.rgb[1] - other.rgb[1],
+              color.rgb[2] - other.rgb[2],
+            ) < 38,
+          );
+          if (!tooSimilar) selected.push(color);
+          if (selected.length === 6) break;
+        }
+
+        return selected.map((color) => ({
+          ...color,
+          percent: Math.max(1, Math.round((color.count / sampled) * 100)),
+        }));
+      }
+
+      function renderPalette(colors) {
+        palette.replaceChildren();
+        if (colors.length === 0) {
+          palette.innerHTML = '<div class="empty-results">No se encontraron píxeles opacos en la imagen.</div>';
+          return;
+        }
+
+        colors.forEach(({ rgb, percent }, index) => {
+          const hex = rgbHex(rgb);
+          const item = document.createElement("button");
+          item.className = "palette-item";
+          item.type = "button";
+          item.setAttribute("aria-label", `Analizar tono ${index + 1}, ${hex}`);
+
+          const swatch = document.createElement("span");
+          swatch.className = "palette-swatch";
+          swatch.style.backgroundColor = hex;
+
+          const label = document.createElement("span");
+          label.className = "palette-label";
+          const colorName = document.createElement("strong");
+          colorName.textContent = hex;
+          const reference = nearestReference(rgb);
+          const referenceName = document.createElement("span");
+          referenceName.textContent = `≈ ${reference.name} · ${reference.code}`;
+          label.append(colorName, referenceName);
+
+          const proportion = document.createElement("span");
+          proportion.className = "palette-percent";
+          proportion.textContent = `~${percent}%`;
+          item.append(swatch, label, proportion);
+          item.addEventListener("click", () => showMatch(rgb));
+          palette.append(item);
+        });
+      }
+
+      input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        error.hidden = true;
+        error.textContent = "";
+
+        if (!file.type.startsWith("image/")) {
+          error.textContent = "El archivo elegido no parece ser una imagen.";
+          error.hidden = false;
+          input.value = "";
+          return;
+        }
+
+        try {
+          const bitmap = await createImageBitmap(file);
+          imageBitmap?.close();
+          imageBitmap = bitmap;
+
+          const scale = Math.min(1, 1200 / bitmap.width, 900 / bitmap.height);
+          canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+          canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+          canvas.style.display = "block";
+          empty.hidden = true;
+          document.querySelector("#canvas-hint").hidden = false;
+          document.querySelector("#file-name").textContent = file.name;
+          renderPalette(getDominantColors());
+          showMatch([
+            ...context.getImageData(
+              Math.floor(canvas.width / 2),
+              Math.floor(canvas.height / 2),
+              1,
+              1,
+            ).data.slice(0, 3),
+          ]);
+        } catch (loadError) {
+          error.textContent = "No se pudo abrir esa imagen. Prueba con otro archivo.";
+          error.hidden = false;
+          console.error("No se pudo cargar la foto.", loadError);
+        }
+      });
+
+      canvas.addEventListener("click", (event) => {
+        const bounds = canvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(
+          canvas.width - 1,
+          Math.floor(((event.clientX - bounds.left) / bounds.width) * canvas.width),
+        ));
+        const y = Math.max(0, Math.min(
+          canvas.height - 1,
+          Math.floor(((event.clientY - bounds.top) / bounds.height) * canvas.height),
+        ));
+        const [r, g, b] = context.getImageData(x, y, 1, 1).data;
+        showMatch([r, g, b]);
+      });
+    </script>
+  </body>
+</html>
